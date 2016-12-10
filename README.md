@@ -11,7 +11,7 @@ You'll find it useful to jump start your implementations.
 	<li> <strong>init.</strong> A method to add Google Maps in your html.</li>
 	<li> <strong>geocodeAddress.</strong> Geocoder for quick map centering</li>
 	<li> <strong>addDrawingManager.</strong> Drawing manager for fast geospatial content</li>
-	<li> <strong>drawingToGEOM.</strong> A method to get from Google Drawings to POSTGIS GeomFromText</li>
+	<li> <strong>drawingToWKT.</strong> A method to get from Google Drawings to POSTGIS ST_AsText()</li>
 	<li> <strong>dropMarker.</strong> A method to drop markers on the Google Map</li>
 </ul>
 
