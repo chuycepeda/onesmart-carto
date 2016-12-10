@@ -3,7 +3,7 @@
 		<title>One Smart Carto Libraries</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<!-- CARTO.COM CSS REFERENCE -->
-		<script src="lib/cartodb.css"></script>
+    	<link rel="stylesheet" href="lib/cartodb.css">
 
 	</head>
 	<body>
@@ -311,13 +311,13 @@
             {
                 cartocss: "#nl_denue{marker-line-color: #FFF;marker-line-width: 1;marker-line-opacity: 1;marker-placement: point;marker-type: ellipse;marker-width: 10;marker-fill: #0F3B82;marker-allow-overlap: true;}",
                 sql: "SELECT * FROM nl_denue",
-                interactivity: "cve_ent, cve_mun, nombre_act"
+                interactivity: ["cve_ent", "cve_mun", "nombre_act", "cartodb_id"]
                 
             },
             {
                 cartocss: "#nl_municipios{polygon-fill: #229A00;polygon-opacity: 0.7;line-color: #FFF;line-width: 0.5;line-opacity: 1;}",
                 sql: "SELECT * FROM nl_municipios WHERE nom_mun IN ('Monterrey', 'Guadalupe', 'San Pedro Garza García', 'Escobedo', 'Apodaca', 'Santiago', 'Santa Catarina', 'Juárez', 'San Nicolás de los Garza')",
-                interactivity: "cve_ent, cve_mun, nom_mun"
+                interactivity: ["cve_ent", "cve_mun", "nom_mun", "cartodb_id"]
                 
             }
             ]
@@ -329,7 +329,6 @@
 
 	    function createLayers(){
 	        cartodb.createLayer(map,layerSource, {
-
 	        })
 	        .on('done', function(layer) {
 	            map.overlayMapTypes.setAt(0, layer);
