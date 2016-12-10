@@ -33,4 +33,4 @@ You'll find it useful to jump start your implementations.
 	<li> <strong>ajax<em>*</em>.</strong> A series of snippets to override carto when cache is messing up your stuff.</li>
 </ul>
 
-<em>For the ease of understanding I use the word <strong>"drawing"</strong> to refer the equivalent to POSTGIS <a href="www.postgis.org/docs/ST_AsText.html" target="_blank">ST_AsText()</a> also known as the Well-Known Text (WKT) for geometries and geographies.</em>
+<em>For the ease of understanding I use the word <strong>"Drawing"</strong> to refer the equivalent to POSTGIS <a href="www.postgis.org/docs/ST_AsText.html" target="_blank">ST_AsText()</a> also known as the Well-Known Text (WKT) for geometries and geographies.</em>
