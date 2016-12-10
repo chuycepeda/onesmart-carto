@@ -182,7 +182,7 @@
 							str_input += lon +' '+ lat +',';
 						});
 						str_input = str_input.substr(0,str_input.length-1) + ','+ str_input.split(',')[0].substr(9)+'))';
-						drawingToGEOM(str_input);
+						drawingToWKT(str_input);
 					});
 					google.maps.event.addListener(polygon, 'set_at', function () {
 						var str_input ='POLYGON((';
@@ -193,10 +193,10 @@
 							str_input += lon +' '+ lat +',';
 						});
 						str_input = str_input.substr(0,str_input.length-1) + ','+ str_input.split(',')[0].substr(9)+'))';
-						drawingToGEOM(str_input);
+						drawingToWKT(str_input);
 					});
 					str_input = str_input.substr(0,str_input.length-1) + ','+ str_input.split(',')[0].substr(9)+'))';
-					drawingToGEOM(str_input);
+					drawingToWKT(str_input);
 				}
 				if (event.type == google.maps.drawing.OverlayType.MARKER) {
 					var str_input ='POINT(';
@@ -213,10 +213,10 @@
 						// console.log(lat, lon); 
 						str_input += lon +' '+ lat +',';
 						str_input = str_input.substr(0,str_input.length-1) + ')';
-						drawingToGEOM(str_input);
+						drawingToWKT(str_input);
 					});
 					str_input = str_input.substr(0,str_input.length-1) + ')';
-					drawingToGEOM(str_input);
+					drawingToWKT(str_input);
 				}
 				if (event.type == google.maps.drawing.OverlayType.POLYLINE) {
 					var str_input ='LINESTRING(';
@@ -237,7 +237,7 @@
 							str_input += lon +' '+ lat +',';
 						});
 						str_input = str_input.substr(0,str_input.length-1) + ')';
-						drawingToGEOM(str_input);
+						drawingToWKT(str_input);
 					});
 					google.maps.event.addListener(polyline, 'set_at', function () {
 						var str_input ='LINESTRING(';
@@ -248,16 +248,16 @@
 							str_input += lon +' '+ lat +',';
 						});
 						str_input = str_input.substr(0,str_input.length-1) + ')';
-						drawingToGEOM(str_input);
+						drawingToWKT(str_input);
 					});
 					str_input = str_input.substr(0,str_input.length-1) + ')';
-					drawingToGEOM(str_input);
+					drawingToWKT(str_input);
 				}
 				// Maybe turn off to avoid more layers
 				drawingManager.setMap(null);
 			});
 	    }
-	    function drawingToGEOM(str_input){
+	    function drawingToWKT(str_input){
 			console.log('Geom text:', str_input);
 
 			// EXAMPLES OF CARTO INSERT
