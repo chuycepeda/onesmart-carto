@@ -1,0 +1,411 @@
+<html>
+	<head>
+		<title>One Smart Carto Libraries</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<!-- CARTO.COM CSS REFERENCE -->
+		<script src="lib/cartodb.css"></script>
+
+	</head>
+	<body>
+		<input id="search_address" type="text" placeholder="Buscar dirección..." onkeydown="if (event.keyCode == 13) geocodeAddress('search_address');" style="width: 80%; margin-left:10%;padding:10px;">
+		<div class="" id="map" style="width: 80%; margin-left:10%; height: 60vh"></div>
+	</body>
+
+	<!-- MUST HAVE GOOGLE MAPS JAVASCRIPT API REFERENCE PLUS API KEY -->
+	<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=drawing,places,panoramio,weather,visualization&key=AIzaSyDOgaT_BvuCp2x9T4SVzyBLx4qEQrhvhbc"></script>
+	<!-- CARTO.COM JS REFERENCE -->
+	<script src="lib/cartodb.js"></script>
+	<!-- ONE SMART CARTO JS REFERENCE -->
+	<script src="onesmartcarto.js"></script>
+	<script>
+		/* 
+
+			GOOGLE MAPS ESSENTIAL VARIABLES & METHODS 
+
+				You must have a Google Maps Javascript API credential, and
+				enabled APIs for your domain for Maps and Geocode.
+
+		*/
+		var map, mapCenter = [25.7047919623, -100.297410371], mapzoom = 11, drawingManager, enabledDrawing = false, polygon, polyline, point, marker;
+    	google.maps.event.addDomListener(window,'load',init);
+		function init(){
+        
+	        var mapOptions = {
+	            center: new google.maps.LatLng(mapCenter[0], mapCenter[1]),
+	            zoom: mapzoom,
+	            minZoom:5,
+	            // maxZoom:12,
+	            zoomControl: true,
+	            zoomControlOptions: {
+	                position: google.maps.ControlPosition.LEFT_BOTTOM 
+	            },
+	            scrollwheel: true,
+	            streetViewControl: true,
+	            streetViewControlOptions: {
+	                position: google.maps.ControlPosition.LEFT_BOTTOM   
+	            },
+	            mapTypeControl: true,
+	            mapTypeControlOptions: {
+	                mapTypeIds: [google.maps.MapTypeId.SATELLITE, 'style_1','style_2'],
+	                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+	                position: google.maps.ControlPosition.RIGHT_TOP   
+	            },
+	            panControl:true,
+	            backgroundColor: 'rgb(249, 249, 249)',
+	            rotateControl:true,
+	            overviewMapControl:true
+	        };
+
+	        map = new google.maps.Map(document.getElementById('map'), mapOptions);
+
+	        /* GMAPS STYLES, YOU CAN GET MORE @ http://snazzymaps.com/ */
+	        var styler1 = [];
+	        var styler2 = [{"featureType":"water","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":17}]},{"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":20}]},{"featureType":"road.highway","elementType":"geometry.fill","stylers":[{"color":"#000000"},{"lightness":17}]},{"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#000000"},{"lightness":29},{"weight":0.2}]},{"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":18}]},{"featureType":"road.local","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":16}]},{"featureType":"poi","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":21}]},{"elementType":"labels.text.stroke","stylers":[{"visibility":"on"},{"color":"#000000"},{"lightness":16}]},{"elementType":"labels.text.fill","stylers":[{"saturation":36},{"color":"#000000"},{"lightness":40}]},{"elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"featureType":"transit","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":19}]},{"featureType":"administrative","elementType":"geometry.fill","stylers":[{"color":"#000000"},{"lightness":20}]},{"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"color":"#000000"},{"lightness":17},{"weight":1.2}]}];
+	        
+	        var styleMap1 = new google.maps.StyledMapType(styler1,{name: "Map"});   
+	        var styleMap2 = new google.maps.StyledMapType(styler2,{name: "Black"}); 
+	        map.mapTypes.set('style_1', styleMap1);
+	        map.mapTypes.set('style_2', styleMap2);
+	        map.setMapTypeId('style_1');
+	        
+	        /* ENSURE THE MAP WILL APPEAR WHEN RESIZING A WINDOW */
+	        google.maps.event.addDomListener(window, "resize", function() {
+	              var center = map.getCenter();
+	              google.maps.event.trigger(map, "resize");
+	              map.setCenter(center);
+	        });
+
+	        /* ADD A BIT OF UX SATISFACTION WHEN TYPING AN ADDRESS */
+	        var autocomplete_from = new google.maps.places.Autocomplete(document.getElementById('search_address'))
+	        autocomplete_from.bindTo('bounds', map);
+	        google.maps.event.addListener(autocomplete_from, 'place_changed', function() {
+	            var place = autocomplete_from.getPlace();
+	            if (place.geometry.viewport) {
+	              map.fitBounds(place.geometry.viewport);
+	            }else{
+	              map.setCenter(place.geometry.location);
+	              map.setZoom(17);
+	            }
+	        }); 
+
+	        if (enabledDrawing) addDrawingManager();
+
+	        cartoInitialize();
+	    }
+	    function geocodeAddress(input) {
+	        var address, obj;                               
+
+	        address = document.getElementById(input).value;
+	        obj = { 'address': address };
+	        geocoder.geocode( obj, function(results, status) {
+	            if (status == google.maps.GeocoderStatus.OK) {
+	                
+	                if (typeof(input) === 'string') {
+	                    map.setCenter(results[0].geometry.location);
+	                    switch (results[0].geometry.location_type){
+	                        case 'ROOFTOP': map.setZoom(17); break;
+	                        case 'RANGE_INTERPOLATED': map.setZoom(16); break;
+	                        case 'GEOMETRIC_CENTER': map.setZoom(15); break;
+	                        case 'APPROXIMATE': map.setZoom(13); break;
+	                    }
+	                }else{
+	                    if (results[1]) {
+	                        document.getElementById(input).value = results[1].formatted_address;
+	                    } else {
+	                        console.log('No results found');
+	                    }
+	                }
+	            
+	            } else {
+	                console.log('Geocode was not successful for the following reason: ' + status);
+	            }
+	        });
+	    }
+	    function addDrawingManager(){
+	    	drawingManager = new google.maps.drawing.DrawingManager({
+	          drawingMode: google.maps.drawing.OverlayType.POLYGON,
+	          drawingControl: true,
+	          drawingControlOptions: {
+	            position: google.maps.ControlPosition.TOP_CENTER,
+	            drawingModes: [
+	              google.maps.drawing.OverlayType.POLYGON,
+	              google.maps.drawing.OverlayType.MARKER,
+	              google.maps.drawing.OverlayType.POLYLINE
+	            ]
+	          },
+	          polygonOptions: {
+	            fillColor: '#00FF00',
+	            fillOpacity: 0.25,
+	            strokeWeight: 5,
+	            editable: true,
+	            draggable: true,
+	            zIndex: 1
+	          },
+	          polylineOptions: {
+	            fillColor: '#FF0000',
+	            fillOpacity: 0.25,
+	            strokeWeight: 5,
+	            editable: true,
+	            draggable: true,
+	            zIndex: 1
+	          },
+	          markerOptions: {
+	            fillColor: '#0000FF',
+	            fillOpacity: 0.25,
+	            strokeWeight: 5,
+	            editable: true,
+	            draggable: true,
+	            zIndex: 1
+	          }
+	        });
+	        drawingManager.setMap(map);
+
+	        //create listeners for complete drawings
+	        google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+				if (event.type == google.maps.drawing.OverlayType.POLYGON) {
+					var str_input ='POLYGON((';
+					polygon = event.overlay.getPath();
+					// console.log('polygon path array', event.overlay.getPath().getArray());
+					$.each(event.overlay.getPath().getArray(), function(key, latlng){
+						var lat = latlng.lat();
+						var lon = latlng.lng();
+						// console.log(lat, lon); 
+						str_input += lon +' '+ lat +',';
+					});
+					google.maps.event.addListener(polygon, 'insert_at', function () {
+						var str_input ='POLYGON((';
+						$.each(polygon.getArray(), function(key, latlng){
+							var lat = latlng.lat();
+							var lon = latlng.lng();
+							// console.log(lat, lon); 
+							str_input += lon +' '+ lat +',';
+						});
+						str_input = str_input.substr(0,str_input.length-1) + ','+ str_input.split(',')[0].substr(9)+'))';
+						drawingToGEOM(str_input);
+					});
+					google.maps.event.addListener(polygon, 'set_at', function () {
+						var str_input ='POLYGON((';
+						$.each(polygon.getArray(), function(key, latlng){
+							var lat = latlng.lat();
+							var lon = latlng.lng();
+							// console.log(lat, lon); 
+							str_input += lon +' '+ lat +',';
+						});
+						str_input = str_input.substr(0,str_input.length-1) + ','+ str_input.split(',')[0].substr(9)+'))';
+						drawingToGEOM(str_input);
+					});
+					str_input = str_input.substr(0,str_input.length-1) + ','+ str_input.split(',')[0].substr(9)+'))';
+					drawingToGEOM(str_input);
+				}
+				if (event.type == google.maps.drawing.OverlayType.MARKER) {
+					var str_input ='POINT(';
+					point = event.overlay;
+					// console.log('marker position obj', event.overlay.getPosition());
+					var lat = point.getPosition().lat();
+					var lon = point.getPosition().lng();
+					// console.log(lat, lon); 
+					str_input += lon +' '+ lat +',';
+					google.maps.event.addListener(point, 'dragend', function () {
+						var str_input ='POINT(';
+						var lat = point.getPosition().lat();
+						var lon = point.getPosition().lng();
+						// console.log(lat, lon); 
+						str_input += lon +' '+ lat +',';
+						str_input = str_input.substr(0,str_input.length-1) + ')';
+						drawingToGEOM(str_input);
+					});
+					str_input = str_input.substr(0,str_input.length-1) + ')';
+					drawingToGEOM(str_input);
+				}
+				if (event.type == google.maps.drawing.OverlayType.POLYLINE) {
+					var str_input ='LINESTRING(';
+					polyline = event.overlay.getPath();
+					// console.log('polyline path array', event.overlay.getPath().getArray());
+					$.each(event.overlay.getPath().getArray(), function(key, latlng){
+						var lat = latlng.lat();
+						var lon = latlng.lng();
+						// console.log(lat, lon); 
+						str_input += lon +' '+ lat +',';
+					});
+					google.maps.event.addListener(polyline, 'insert_at', function () {
+						var str_input ='LINESTRING(';
+						$.each(polyline.getArray(), function(key, latlng){
+							var lat = latlng.lat();
+							var lon = latlng.lng();
+							// console.log(lat, lon); 
+							str_input += lon +' '+ lat +',';
+						});
+						str_input = str_input.substr(0,str_input.length-1) + ')';
+						drawingToGEOM(str_input);
+					});
+					google.maps.event.addListener(polyline, 'set_at', function () {
+						var str_input ='LINESTRING(';
+						$.each(polyline.getArray(), function(key, latlng){
+							var lat = latlng.lat();
+							var lon = latlng.lng();
+							// console.log(lat, lon); 
+							str_input += lon +' '+ lat +',';
+						});
+						str_input = str_input.substr(0,str_input.length-1) + ')';
+						drawingToGEOM(str_input);
+					});
+					str_input = str_input.substr(0,str_input.length-1) + ')';
+					drawingToGEOM(str_input);
+				}
+				// Maybe turn off to avoid more layers
+				drawingManager.setMap(null);
+			});
+	    }
+	    function drawingToGEOM(str_input){
+			console.log('Geom text:', str_input);
+
+			// EXAMPLES OF CARTO INSERT
+
+			// INSERT INTO table (the_geom) VALUES (ST_GeomFromText('POLYGON((-100.1953125 25.47179346, -100.2255249 25.47427305, -100.20767212 25.44079439, -100.18707275 25.42467172, -100.16647339 25.43335343, -100.1953125 25.47179346))', 4326))
+
+			// INSERT INTO table (the_geom) VALUES (ST_GeomFromText('POINT(-100.29739871621126 25.6956013396687)', 4326))
+
+			// INSERT INTO table (the_geom) VALUES (ST_GeomFromText('LINESTRING(-100.31070247292519 25.717719359335014,-100.3252936899662 25.708439571881506,-100.30709758400917 25.704340768686674,-100.30289188027382 25.708980912693768,-100.29250636696815 25.701943290072293,-100.31070247292519 25.717719359335014)', 4326))
+	    }
+	    function dropMarker (loc) {
+	        if (marker == null){
+	            var color = "#00FF00";
+	            marker = new google.maps.Marker({
+	                    animation: google.maps.Animation.DROP,
+	                    position: loc,
+	                    map: map,
+	                    draggable: true,
+	                    icon: 'http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=|'+color.substr(1)
+	            });
+	            google.maps.event.addListener(marker,'dragend',function(event) {
+	                    geocodeAddress(event.latLng);
+	            }); 
+	        }else{
+	            marker.setPosition(loc);
+	        }	        
+	    }
+
+	    /****************************************************/
+
+	    /* 
+
+			CARTODB ESSENTIAL VARIABLES & METHODS 
+
+				Most of the methods work for public tables, nevertheless
+				adding your api_key parameter will make it work for privates.
+
+				Structure is simple:
+					(1) Create Layers
+					(2) Add a method to query
+					(3) Add a method to change visualization
+					(4) Enable front-end controls
+
+				For reference on layerSource object: https://carto.com/docs/carto-engine/carto-js/layer-source-object/
+
+		*/
+    	var sublayers = [];
+    	var layerSource = {
+    		user_name: 'mexico',
+            type: 'cartodb',
+            sublayers: [
+            {
+                cartocss: "#nl_denue{marker-line-color: #FFF;marker-line-width: 1;marker-line-opacity: 1;marker-placement: point;marker-type: ellipse;marker-width: 10;marker-fill: #0F3B82;marker-allow-overlap: true;}",
+                sql: "SELECT * FROM nl_denue",
+                interactivity: "cve_ent, cve_mun, nombre_act"
+                
+            },
+            {
+                cartocss: "#nl_municipios{polygon-fill: #229A00;polygon-opacity: 0.7;line-color: #FFF;line-width: 0.5;line-opacity: 1;}",
+                sql: "SELECT * FROM nl_municipios WHERE nom_mun IN ('Monterrey', 'Guadalupe', 'San Pedro Garza García', 'Escobedo', 'Apodaca', 'Santiago', 'Santa Catarina', 'Juárez', 'San Nicolás de los Garza')",
+                interactivity: "cve_ent, cve_mun, nom_mun"
+                
+            }
+            ]
+    	};
+
+	    function cartoInitialize(){
+	    	createLayers();
+	    }
+
+	    function createLayers(){
+	        cartodb.createLayer(map,layerSource, {
+
+	        })
+	        .on('done', function(layer) {
+	            map.overlayMapTypes.setAt(0, layer);
+	            for (var i = 0, j = layer.getSubLayerCount(); i < j; i++) {
+	               sublayers[i] = layer.getSubLayer(i);
+	               cartodb.vis.Vis.addInfowindow(map, layer.getSubLayer(i), layerSource.sublayers[i].interactivity);
+	               // you can hide sublayers using: sublayers[i].hide(); 
+
+	               console.log("Congrats, you added sublayer #" + i + "! -> " + layerSource.sublayers[i].sql);
+	               sublayers[i].on('featureClick', function(e, latlng, pos, data, layerIndex) {
+	                    console.log('feature clicked:');
+	                    console.log('e',e);
+						console.log('latlng',latlng);
+						console.log('pos',pos);
+						console.log('data',data);
+						console.log('layerIndex',layerIndex);
+	               });
+	            }
+
+	            setStyle('cluster');
+	        }); 
+	    }
+
+	    function setQ(){
+	        /* 
+	            FORM THE SQL STATEMENT AND USE IT THROUGH
+
+	            	sublayers[i].setSQL();	// i is according to the order of layers in layerSource
+
+	            OR USE 
+
+	    			var sql = new cartodb.SQL({ user: '{{cartodb_user}}' });
+		            sql.execute(query).done(function(response) {
+		                console.log('query response', response);
+		            });
+
+	            FINALLY, UPDATE MAP POSITION USING
+
+		            sql.getBounds(query).done(function(bounds) {
+	                  var _bounds = new google.maps.LatLngBounds();
+	                  _bounds.extend(new google.maps.LatLng(bounds[0][0], bounds[0][1]));
+	                  _bounds.extend(new google.maps.LatLng(bounds[1][0], bounds[1][1]));
+	                  map.fitBounds(_bounds);
+	                });
+	        */
+	    }
+
+	    function setStyle(style){
+	        /* 
+	            sublayers[i] is the most important layer for styling, it's the unidades table
+	            sublayers[i].setCartoCSS()
+	        */
+	        var styler;
+	        switch(style){
+	        	case 'normal':
+	        		styler = '#nl_denue{marker-line-color: #FFF;marker-line-width: 1;marker-line-opacity: 1;marker-placement: point;marker-type: ellipse;marker-width: 10;marker-fill: #0F3B82;marker-allow-overlap: true;}';
+	        		sublayers[0].setCartoCSS(styler);
+	        		styler = '#nl_municipios{polygon-fill: #229A00;polygon-opacity: 0.7;line-color: #FFF;line-width: 0.5;line-opacity: 1;}';
+	        		sublayers[1].setCartoCSS(styler);
+	        		break;
+	        	case 'categorize':
+	        		styler = '#nl_denue {marker-fill-opacity: 0.9;marker-line-color: #FFF;marker-line-width: 1;marker-line-opacity: 1;marker-placement: point;marker-type: ellipse;marker-width: 10;marker-allow-overlap: true;}#nl_denue[cve_mun="006"] {marker-fill: #A6CEE3;}#nl_denue[cve_mun="009"] {marker-fill: #1F78B4;}#nl_denue[cve_mun="019"] {marker-fill: #B2DF8A;}#nl_denue[cve_mun="021"] {marker-fill: #33A02C;}#nl_denue[cve_mun="026"] {marker-fill: #FB9A99;}#nl_denue[cve_mun="031"] {marker-fill: #E31A1C;}#nl_denue[cve_mun="033"] {marker-fill: #FDBF6F;}#nl_denue[cve_mun="039"] {marker-fill: #FF7F00;}#nl_denue[cve_mun="046"] {marker-fill: #CAB2D6;}#nl_denue[cve_mun="048"] {marker-fill: #6A3D9A;}#nl_denue {marker-fill: #DDDDDD;}';
+	        		sublayers[0].setCartoCSS(styler);
+	        		styler = '#nl_municipios {polygon-opacity: 0.7;line-color: #FFF;line-width: 0.5;line-opacity: 1;}#nl_municipios[nom_mun="Apodaca"] {polygon-fill: #A6CEE3;}#nl_municipios[nom_mun="Guadalupe"] {polygon-fill: #1F78B4;}#nl_municipios[nom_mun="Juárez"] {polygon-fill: #B2DF8A;}#nl_municipios[nom_mun="Monterrey"] {polygon-fill: #33A02C;}#nl_municipios[nom_mun="San Nicolás de los Garza"] {polygon-fill: #FB9A99;}#nl_municipios[nom_mun="San Pedro Garza García"] {polygon-fill: #E31A1C;}#nl_municipios[nom_mun="Santa Catarina"] {polygon-fill: #FDBF6F;}#nl_municipios[nom_mun="Santiago"] {polygon-fill: #FF7F00;}'
+	        		sublayers[1].setCartoCSS(styler);
+	        		break;
+	        	case 'cluster':
+	        		styler = '#nl_denue{marker-line-color: #FFF;marker-line-width: 1;marker-line-opacity: 1;marker-placement: point;marker-type: ellipse;marker-width: 10;marker-fill: #0F3B82;marker-allow-overlap: false;}';
+	        		sublayers[0].setCartoCSS(styler);
+	        	default:
+	        		break;
+	        }
+	    }
+
+	    function enableControls(){
+
+	    }
+	</script>
+</html>
