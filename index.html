@@ -347,6 +347,56 @@
 						console.log('data',data);
 						console.log('layerIndex',layerIndex);
 	               });
+
+
+	               /*
+						// CUSTOM INFOWINDOW
+						
+                		var _interactivity = ["cartodb_id","nombre","tipo","imagen","url"];
+                		sublayers[i].infowindow.set('template', $('#infowindow_custom').html());
+                        cdb.vis.Vis.addInfowindow(map, sublayers[i], _interactivity, {
+                            infowindowTemplate: $('#infowindow_custom').html()
+                        });
+                        sublayers[i].setInteraction(true); 
+
+
+						//trigger on hovering needs a wait boolean, global var
+						sublayers[i].on('featureOver', function(e, latlng, pos, data, layerIndex) {
+			            	if (!wait){
+			            		wait = true;
+								sql.execute("SELECT *, ST_AsText(ST_Centroid(the_geom)) FROM TABLE_NAME where cartodb_id = "+data.cartodb_id)
+							    .done(function(response) {
+							        console.log('triggerInfowindow response', response);
+							        var x = parseFloat(response.rows[0].st_astext.replace('POINT(','').split(' ')[0]);
+							        var y = parseFloat(response.rows[0].st_astext.replace('POINT(','').split(' ')[1]);
+							        sublayers[0].trigger('featureClick', null, [y, x], null, { cartodb_id: response.rows[0].cartodb_id }, 0);
+			            			wait = false;
+							    });
+							}
+			            });
+
+
+                        //add this as a separate script tag inside your html   --- removed the '<' for the ease of js comment syntax
+                        script type="infowindow/html" id="infowindow_custom"
+				            <div class="cartodb-popup v2"> 
+				                <a id="close-city" href="#close" class="cartodb-popup-close-button close">x</a> 
+				                <div class="cartodb-popup-header"> 
+				                    <p style="color:#DDDDDD; padding-left:10px; margin-bottom:-20px">Name</p> 
+				                    <h3 style="padding:10px;" class="brand-secondary-color-text">{{name}}</h3> 
+				                    <span class="separator"></span> 
+				                </div> 
+				                <div class="cartodb-popup-content-wrapper"> 
+				                    <div class="cartodb-popup-content">                            
+				                        <p style="color:#DDDDDD; padding-left:10px; margin-bottom:-10px">Name</p> 
+				                        <h4 style="padding:10px;" class="brand-secondary-color-text">{{Name}}</h4> 
+				                    </div> 
+				                </div> 
+				                <div class="cartodb-popup-tip-container"> </div> 
+				            </div> 
+				        /script
+
+
+	               */
 	            }
 
 	            setStyle('cluster');

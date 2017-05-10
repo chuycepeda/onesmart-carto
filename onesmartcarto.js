@@ -16,11 +16,31 @@ function ajaxUpdate(cartodb_user,cartodb_table,sql_statement,csv_columns,csv_val
 	$.getJSON('https://'+cartodb_user+'.carto.com/api/v2/sql/?q=UPDATE SET ('+csv_columns+') = ('+csv_values+') FROM '+cartodb_table+' '+sql_statement+'&api_key='+cartodb_apikey, function(response) {
 	  console.log(response);
 	});
+
+	/* update from another table
+
+		UPDATE B SET
+		     COLUMN1 = A.COLUMN1,
+		     COLUMN2 = A.COLUMN2,
+		     COLUMN3 = A.COLUMN3
+		FROM A
+		WHERE A.ID = B.ID
+
+	*/
 }
 // simple insert
 function ajaxInsert(cartodb_user,cartodb_table,sql_statement,csv_columns,csv_values,cartodb_apikey){
 	$.getJSON('https://'+cartodb_user+'.carto.com/api/v2/sql/?q=INSERT INTO '+cartodb_table+' ('+csv_columns+') VALUES ('+csv_values+')&api_key='+cartodb_apikey, function(response) {
 	  console.log(response);
+
+	  /* insert from another table
+
+	  	INSERT INTO TABLE1 (id, col_1, col_2, col_3)
+		SELECT id, c1, c2, c3
+		FROM TABLE2
+		WHERE col_a = 'something';
+
+	  */
 	});
 }
 // simple DELETE
@@ -246,6 +266,10 @@ function getDrawingFromGeom(cartodb_user,cartodb_table,sql_statement){
 	(10) AREA
 
 		SELECT ST_Area(the_geom::geography) as sqm, ST_Area(the_geom::geography)/1000000 as sqkm, ST_Area(the_geom::geography)*10.7639 as sqft FROM table
+
+	(11) MERGING MULTIPLE POLYGONS INTO SINGLE GEOMETRY
+
+		SELECT name, ST_Multi(ST_Collect(f.the_geom)) as singlegeom FROM (SELECT name, (ST_Dump(the_geom)).geom As the_geom FROM table ) As f GROUP BY name
 	
 	= = = 
 
