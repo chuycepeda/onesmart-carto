@@ -164,6 +164,8 @@ function getDrawingFromGeom(cartodb_user,cartodb_table,sql_statement){
 
 		UPDATE SET (col1,col2,col3) = ('A',100,'C') FROM table WHERE cartodb_id = 1
 
+		UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition;
+
 	(4) DELETE AN ELEMENT (need api_key parameter)
 
 		DELETE FROM table WHERE cartodb_id = 1
@@ -178,6 +180,9 @@ function getDrawingFromGeom(cartodb_user,cartodb_table,sql_statement){
 		from a GEOM TEXT:
 
 			SELECT * FROM table WHERE ST_Intersects(the_geom, ST_GeomFromText('POLYGON((-100.3047801554203 25.709135581044972,-100.30812755227089 25.70364473148278,-100.30134692788124 25.70364473148278,-100.3047801554203 25.709135581044972))',4326))
+
+
+			SELECT * FROM table WHERE ST_Intersects(the_geom, ST_GeomFromText('POINT(-100.31464064550778 25.720455131035184)',4326))
 
 		from a GEOM (useful for querying intersections among different carto accounts):
 
